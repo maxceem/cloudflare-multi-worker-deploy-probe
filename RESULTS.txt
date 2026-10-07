@@ -1,0 +1,48 @@
+Deploy-button feasibility results — 2026-10-07
+
+Source template: https://github.com/maxceem/cloudflare-multi-worker-deploy-probe
+Button-created copy: https://github.com/maxceem/multi-worker-button-probe
+Wrangler: 4.113.0 (pinned). Workers Builds Node: 24.18.0.
+
+Observed onboarding:
+- Cloudflare detected npm run deploy from package.json.
+- The normal flow created the destination repository and connected Builds.
+- The automatically generated default user API token was sufficient. No token
+  scope customization, CLI deployment, or extra build variables were needed.
+- GitHub app installation and re-authentication were needed because this
+  account did not already have that connection configured.
+
+Results:
+1. Initial build failed on prototype error handling: the service API returns
+   code 10090 for a missing Worker, rather than the script's expected 10007.
+   Both explicit missing-Worker codes are now handled. Other errors still fail.
+2. Corrected build created the realtime Worker and SQLite Durable Object, then
+   deployed the primary Worker with a service binding and direct discovery URL.
+   Build: 4a213a03-2f43-4b50-93d1-c6aeb4f6a12c
+3. A commit changed realtime.js and triggered a normal Workers Builds release.
+   An existing socket kept echoing release f8bada47d933 throughout deployment
+   and after promotion. A new socket echoed the new release 4386427b1ad1.
+   Build: b0b07159-e175-45a2-8372-ed2d661d16da
+   Commit: 3bcc4832de4587be383252006f46d5cfcac069fb
+4. A gateway-only commit changed discovery output to gatewayRevision=2.
+   The realtime release remained 4386427b1ad1, and the open socket survived.
+   Build: 65c0f13e-7b43-4327-a16b-0c69f053c91b
+   Commit: 3bb9695b1a18004438446fe1a298637c9d33a063
+
+Build history (account access required):
+https://dash.cloudflare.com/ee18c5726310fe2f0eeed89703b3611a/workers/services/view/multi-worker-button-probe/production/builds
+
+Scope and limitations:
+- These are live echo-WebSocket tests, not a production gateway rollout or a
+  load/stability test. No provider sessions, quotas, vault, or D1 were tested.
+- Clearing WRANGLER_CI_OVERRIDE_NAME and WRANGLER_CI_MATCH_TAG only for companion
+  subprocesses is necessary with this Wrangler version. It is a small adapter
+  around implementation-specific CI behavior; retest on Wrangler upgrades.
+- Test sockets connect directly to the immutable release Worker. There is no
+  long-lived WebSocket proxy through the primary Worker.
+- Runtime restart, network failure, recovery, release locking, artifact
+  integrity, admission/auth, storage compatibility, and old-release cleanup
+  still require a production design. No zero-disconnection guarantee is made.
+- The deployment and old realtime release are retained for inspection. The
+  generated build token is named multi-worker-button-probe-builds. Remove the
+  test Workers and revoke that token when the demonstration is no longer needed.

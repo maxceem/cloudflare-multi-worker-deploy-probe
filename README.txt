@@ -25,10 +25,11 @@ WRANGLER_CI_MATCH_TAG. The primary keeps the Builds identity checks.
 This is an adaptation of current Wrangler behavior, not a documented guarantee
 of multi-Worker deployment through the Deploy button. Wrangler is pinned.
 
-The separate probe.mjs has already verified live deployments, service bindings,
-DO provisioning, promotion, and routing rollback with existing sockets open,
-using local credentials and simulated Builds targeting variables. That does
-not establish the permissions or behavior of an actual Deploy-button build.
+The actual Deploy-button workflow was tested on 2026-10-07, using its generated
+user token, automatically detected npm run deploy command, and no custom build
+variables. Multi-Worker deployment, DO provisioning, service bindings, realtime
+release promotion with an existing socket open, and gateway-only updates that
+reuse the realtime Worker all passed. See RESULTS.txt for evidence and limits.
 
 This template is not the finished gateway architecture. A production version
 still needs release locking, immutable-artifact validation, shared quota/data
